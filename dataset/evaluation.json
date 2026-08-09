@@ -1,0 +1,23 @@
+[
+  {
+    "eval_id": "eval_001",
+    "dataset_name": "Standard Invoice Quality Benchmark",
+    "expected_grade": "EXCELLENT",
+    "min_expected_score": 90.0,
+    "input_sample_id": "tc_001_perfect_invoice"
+  },
+  {
+    "eval_id": "eval_002",
+    "dataset_name": "Omission & Missing Fields Benchmark",
+    "expected_grade": "NEEDS_REVIEW",
+    "max_expected_score": 75.0,
+    "input_sample_id": "tc_002_missing_fields_invoice"
+  },
+  {
+    "eval_id": "eval_003",
+    "dataset_name": "Corrupted Noise Benchmark",
+    "expected_grade": "POOR",
+    "max_expected_score": 50.0,
+    "input_sample_id": "tc_003_corrupted_scan"
+  }
+]

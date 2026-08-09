@@ -1,0 +1,18 @@
+# Downloaded AI models
+models/
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+
+# Logs
+*.log

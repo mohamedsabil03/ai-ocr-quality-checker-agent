@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Quality Audit Console — AI Small Language Models</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Light Theme (Default) */
+        [data-theme="light"] {
+            --bg-canvas: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-surface-hover: #f1f5f9;
+            --bg-elevated: #ffffff;
+            --border-subtle: #e2e8f0;
+            --border-strong: #cbd5e1;
+
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+
+            --brand-primary: #0284c7;
+            --brand-primary-soft: rgba(2, 132, 199, 0.08);
+            --brand-accent: #4f46e5;
+
+            --success: #059669;
+            --success-soft: rgba(5, 150, 105, 0.08);
+            --warning: #d97706;
+            --warning-soft: rgba(217, 119, 6, 0.08);
+            --danger: #dc2626;
+            --danger-soft: rgba(220, 38, 38, 0.08);
+
+            --console-bg: #0f172a;
+            --console-text: #e2e8f0;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg-canvas: #090d16;
+            --bg-surface: #111726;
+            --bg-surface-hover: #172033;
+            --bg-elevated: #1a2336;
+            --border-subtle: #232d42;
+            --border-strong: #334155;
+
+            --text-heading: #f8fafc;
+            --text-body: #cbd5e1;
+            --text-muted: #64748b;
+
+            --brand-primary: #38bdf8;
+            --brand-primary-soft: rgba(56, 189, 248, 0.12);
+            --brand-accent: #818cf8;
+
+            --success: #34d399;
+            --success-soft: rgba(52, 211, 153, 0.12);
+            --warning: #fbbf24;
+            --warning-soft: rgba(251, 191, 36, 0.12);
+            --danger: #f87171;
+            --danger-soft: rgba(248, 113, 113, 0.12);
+
+            --console-bg: #05080f;
+            --console-text: #94a3b8;
+        }
+
+        :root {
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Top Navigation Header */
+        header {
+            height: 60px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo {
+            width: 28px;
+            height: 28px;
+            background: var(--brand-primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: -0.05em;
+        }
+
+        .header-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-heading);
+            letter-spacing: -0.01em;
+        }
+
+        .header-title span {
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-theme-toggle {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-heading);
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.15s ease;
+        }
+
+        .btn-theme-toggle:hover {
+            border-color: var(--border-strong);
+            background: var(--bg-surface-hover);
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-canvas);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .nav-link:hover {
+            color: var(--text-heading);
+            border-color: var(--border-strong);
+            background: var(--bg-surface-hover);
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--success);
+            padding: 0.3rem 0.65rem;
+            background: var(--success-soft);
+            border-radius: 9999px;
+            border: 1px solid var(--success-soft);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        /* Workbench Layout Grid */
+        .workbench {
+            display: grid;
+            grid-template-columns: 520px 1fr;
+            flex: 1;
+            min-height: calc(100vh - 60px);
+        }
+
+        @media (max-width: 1100px) {
+            .workbench {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .panel-left {
+            border-right: 1px solid var(--border-subtle);
+            background: var(--bg-canvas);
+        }
+
+        .panel-right {
+            background: var(--bg-surface);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+
+        /* Presets Toolbar */
+        .preset-bar {
+            display: flex;
+            gap: 0.4rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+        }
+
+        .btn-preset {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-body);
+            padding: 0.35rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .btn-preset:hover {
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+            background: var(--brand-primary-soft);
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-heading);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        label span.hint {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        textarea,
+        input[type="text"],
+        select {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 0.65rem 0.8rem;
+            color: var(--text-heading);
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        textarea {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            min-height: 140px;
+            line-height: 1.6;
+        }
+
+        textarea:focus,
+        input:focus,
+        select:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 2px var(--brand-primary-soft);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        /* Primary Execution Button */
+        .btn-primary {
+            background: var(--brand-primary);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.15s ease;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Diagnostic Results Section */
+        .score-banner {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .score-value-box {
+            display: flex;
+            align-items: baseline;
+            gap: 0.4rem;
+        }
+
+        .score-number {
+            font-size: 2.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-heading);
+            line-height: 1;
+        }
+
+        .score-denom {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .score-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.4rem;
+        }
+
+        .grade-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .grade-EXCELLENT {
+            background: var(--success-soft);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .grade-GOOD {
+            background: var(--brand-primary-soft);
+            color: var(--brand-primary);
+            border: 1px solid var(--brand-primary);
+        }
+
+        .grade-NEEDS_REVIEW {
+            background: var(--warning-soft);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .grade-POOR {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .metric-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .card-metric {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .card-metric-title {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .card-metric-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-heading);
+        }
+
+        /* Tool Execution Breakdown Accordion */
+        .breakdown-box {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .breakdown-header {
+            padding: 0.75rem 1rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-heading);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-row {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .tool-row:last-child {
+            border-bottom: none;
+        }
+
+        .tool-name {
+            font-weight: 600;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .tool-desc {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            margin-top: 0.15rem;
+        }
+
+        .tool-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-body);
+            white-space: nowrap;
+        }
+
+        /* Console Output Block */
+        .console-block {
+            background: var(--console-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--console-text);
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        /* Recommendations List */
+        .rec-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            list-style: none;
+        }
+
+        .rec-item {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-canvas);
+            border-left: 3px solid var(--brand-primary);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: var(--text-body);
+        }
+
+        /* Utilities */
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Header Navigation -->
+    <header>
+        <div class="header-brand">
+
+            <div class="header-title">OCR Quality Detector</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                <span id="themeIcon">☀️</span> <span id="themeText">Light Mode</span>
+            </button>
+            <a href="/docs" target="_blank" class="nav-link">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                OpenAPI Docs
+            </a>
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                <span>API Online</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workbench Studio Grid -->
+    <div class="workbench">
+        <!-- Left Panel: Document Workbench -->
+        <div class="panel panel-left">
+            <div class="section-header">
+                <span class="section-title">Document Extraction Workbench</span>
+            </div>
+
+            <!-- Quick Benchmark Presets -->
+            <div class="form-group">
+                <label>Benchmark Test Suite <span class="hint">Load sample payload</span></label>
+                <div class="preset-bar">
+                    <button class="btn-preset" onclick="loadPreset('perfect')">Perfect Invoice</button>
+                    <button class="btn-preset" onclick="loadPreset('missing')">Missing Fields & Cut Text</button>
+                    <button class="btn-preset" onclick="loadPreset('corrupted')">Scan Noise</button>
+                    <button class="btn-preset" onclick="loadPreset('spanish')">Spanish Receipt</button>
+                </div>
+            </div>
+
+            <form id="ocrForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label for="ocr_text">Extracted OCR Text <span class="hint">Target payload to evaluate
+                            *</span></label>
+                    <textarea id="ocr_text" required placeholder="Paste OCR extracted text string..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="ground_truth_text">Ground Truth Reference <span class="hint">Optional exact
+                            text</span></label>
+                    <textarea id="ground_truth_text"
+                        placeholder="Optional original document text for exact omission diffing..."
+                        style="min-height: 70px;"></textarea>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="mandatory_fields">Mandatory Fields</label>
+                        <input type="text" id="mandatory_fields" value="Invoice Number, Date, Total Amount"
+                            placeholder="Field1, Field2...">
+                    </div>
+                    <div class="form-group">
+                        <label for="target_language">Target Language</label>
+                        <select id="target_language">
+                            <option value="en">English (en)</option>
+                            <option value="es">Spanish (es)</option>
+                            <option value="fr">French (fr)</option>
+                            <option value="de">German (de)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="model_name">Small Language Model Agent</label>
+                    <select id="model_name">
+                        <option value="qwen3">Qwen3-4B-Instruct (Local / High-Perf Agent)</option>
+                        <option value="phi4">Phi-4 Mini Instruct (Local / High-Perf Agent)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btnSubmit">
+                    <span id="spinnerText" class="hidden"><span class="spinner"></span>Evaluating...</span>
+                    <span id="btnText">Run Quality Diagnostic</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Right Panel: Diagnostic Studio -->
+        <div class="panel panel-right">
+            <div class="section-header">
+                <span class="section-title">Diagnostic Assessment Report</span>
+                <span id="modelTag"
+                    style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--brand-primary);">SLM:
+                    QWEN3-4B</span>
+            </div>
+
+            <!-- Overall Quality Score Hero -->
+            <div class="score-banner">
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.2rem;">
+                        OVERALL QUALITY SCORE</div>
+                    <div class="score-value-box">
+                        <span class="score-number" id="overallScore">--</span>
+                        <span class="score-denom">/ 100</span>
+                    </div>
+                </div>
+                <div class="score-meta">
+                    <span class="grade-tag grade-GOOD" id="gradeTag">STANDBY</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);" id="evalTime">Ready for input</span>
+                </div>
+            </div>
+
+            <!-- Sub-Metrics Grid -->
+            <div class="metric-cards">
+                <div class="card-metric">
+                    <span class="card-metric-title">Completeness</span>
+                    <span class="card-metric-value" id="completenessVal">--</span>
+                </div>
+                <div class="card-metric">
+                    <span class="card-metric-title">Field Accuracy</span>
+                    <span class="card-metric-value" id="fieldVal">--</span>
+                </div>
+                <div class="card-metric">
+                    <span class="card-metric-title">Language Quality</span>
+                    <span class="card-metric-value" id="langVal">--</span>
+                </div>
+            </div>
+
+            <!-- Tool Diagnostics Breakdown -->
+            <div class="breakdown-box">
+                <div class="breakdown-header">
+                    <span>TOOL DIAGNOSTICS LOG</span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 400;">3 Tools
+                        Executed</span>
+                </div>
+                <div class="tool-row">
+                    <div>
+                        <div class="tool-name">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                            Missing Text Tool
+                        </div>
+                        <div class="tool-desc" id="toolMissingDesc">Monitors line omissions and text sequence alignment.
+                        </div>
+                    </div>
+                    <div class="tool-badge" id="toolMissingBadge">--</div>
+                </div>
+                <div class="tool-row">
+                    <div>
+                        <div class="tool-name">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)"
+                                stroke-width="2">
+                                <polyline points="9 11 12 14 22 4"></polyline>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                            Mandatory Fields Tool
+                        </div>
+                        <div class="tool-desc" id="toolFieldsDesc">Extracts key-value fields (Invoice #, Date, Total).
+                        </div>
+                    </div>
+                    <div class="tool-badge" id="toolFieldsBadge">--</div>
+                </div>
+                <div class="tool-row">
+                    <div>
+                        <div class="tool-name">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                            </svg>
+                            Language Check Tool
+                        </div>
+                        <div class="tool-desc" id="toolLangDesc">Identifies document language and scan character noise.
+                        </div>
+                    </div>
+                    <div class="tool-badge" id="toolLangBadge">--</div>
+                </div>
+            </div>
+
+            <!-- Agent Chain-of-Thought Terminal Log -->
+            <div class="form-group">
+                <label>Agent Chain-of-Thought Execution Console</label>
+                <div class="console-block" id="consoleBox">Console ready. Click "Run Quality Diagnostic" to execute
+                    workflow.</div>
+            </div>
+
+            <!-- Actionable Recommendations -->
+            <div class="form-group">
+                <label>Remediation Recommendations</label>
+                <ul class="rec-list" id="recList">
+                    <li class="rec-item">System idle. Select benchmark or submit custom payload to generate assessment.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (theme === 'light') {
+                icon.innerText = '🌙';
+                text.innerText = 'Dark Mode';
+            } else {
+                icon.innerText = '☀️';
+                text.innerText = 'Light Mode';
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        // Initialize Theme from localStorage or default Light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
+        const PRESETS = {
+            perfect: {
+                ocr_text: "ACME LOGISTICS INC.\n100 Tech Way, Suite 400\nINVOICE #INV-2026-8891\nDate: 2026-08-01\nVendor: ACME Logistics\n\nDescription: Cloud Infrastructure Consulting Services\nSubtotal: $4,500.00\nTax (10%): $450.00\nTotal Amount: $4,950.00\n\nThank you for your business!",
+                ground_truth_text: "ACME LOGISTICS INC.\n100 Tech Way, Suite 400\nINVOICE #INV-2026-8891\nDate: 2026-08-01\nVendor: ACME Logistics\n\nDescription: Cloud Infrastructure Consulting Services\nSubtotal: $4,500.00\nTax (10%): $450.00\nTotal Amount: $4,950.00\n\nThank you for your business!",
+                mandatory_fields: "Invoice Number, Date, Total Amount, Vendor",
+                target_language: "en"
+            },
+            missing: {
+                ocr_text: "INVOICE #INV-9941\nCustomer: Global Corp\nItem: Office Supplies\nAmount: $120.00",
+                ground_truth_text: "INVOICE #INV-9941\nDate: 2026-07-15\nCustomer: Global Corp\nItem: Office Supplies\nAmount: $120.00\nTotal Amount: $120.00",
+                mandatory_fields: "Invoice Number, Date, Total Amount",
+                target_language: "en"
+            },
+            corrupted: {
+                ocr_text: "I%VO1C3 #I|V-002\nD@t3: ??/??/2026\nTot@l Am0unt: $~~~\n|/\\_ Corrupted Scan Noise line #%@$",
+                ground_truth_text: "INVOICE #INV-002\nDate: 2026-05-10\nTotal Amount: $500.00",
+                mandatory_fields: "Invoice Number, Date, Total Amount",
+                target_language: "en"
+            },
+            spanish: {
+                ocr_text: "FACTURA DE SERVICIOS #ES-8821\nFecha: 12/07/2026\nCliente: Maria Gomez\nTotal: 145.50 EUR\nGracias por su compra.",
+                ground_truth_text: "FACTURA DE SERVICIOS #ES-8821\nFecha: 12/07/2026\nCliente: Maria Gomez\nTotal: 145.50 EUR\nGracias por su compra.",
+                mandatory_fields: "Factura, Fecha, Total",
+                target_language: "es"
+            }
+        };
+
+        function loadPreset(key) {
+            const data = PRESETS[key];
+            if (!data) return;
+            document.getElementById('ocr_text').value = data.ocr_text;
+            document.getElementById('ground_truth_text').value = data.ground_truth_text;
+            document.getElementById('mandatory_fields').value = data.mandatory_fields;
+            document.getElementById('target_language').value = data.target_language;
+        }
+
+        document.getElementById('ocrForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            const spinnerText = document.getElementById('spinnerText');
+            const btnText = document.getElementById('btnText');
+
+            btnSubmit.disabled = true;
+            spinnerText.classList.remove('hidden');
+            btnText.classList.add('hidden');
+
+            const fieldsInput = document.getElementById('mandatory_fields').value;
+            const fieldsArray = fieldsInput.split(',').map(s => s.trim()).filter(Boolean);
+
+            const payload = {
+                ocr_text: document.getElementById('ocr_text').value,
+                ground_truth_text: document.getElementById('ground_truth_text').value || null,
+                mandatory_fields: fieldsArray,
+                target_language: document.getElementById('target_language').value,
+                model_name: document.getElementById('model_name').value
+            };
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch('/ocr/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const duration = Math.round(performance.now() - startTime);
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || 'Evaluation failed.');
+                }
+
+                const data = await response.json();
+                renderResults(data, duration);
+            } catch (err) {
+                alert('Diagnostic Error: ' + err.message);
+            } finally {
+                btnSubmit.disabled = false;
+                spinnerText.classList.add('hidden');
+                btnText.classList.remove('hidden');
+            }
+        });
+
+        function renderResults(data, duration) {
+            document.getElementById('modelTag').innerText = 'SLM: ' + data.model_used.toUpperCase();
+            document.getElementById('evalTime').innerText = `Executed in ${duration}ms`;
+
+            const score = data.score;
+            document.getElementById('overallScore').innerText = score.overall_score;
+
+            const gradeTag = document.getElementById('gradeTag');
+            gradeTag.innerText = score.grade;
+            gradeTag.className = 'grade-tag grade-' + score.grade;
+
+            document.getElementById('completenessVal').innerText = score.completeness_score + '%';
+            document.getElementById('fieldVal').innerText = score.field_accuracy_score + '%';
+            document.getElementById('langVal').innerText = score.language_score + '%';
+
+            // Tool Breakdown Badges
+            const tools = data.tool_results;
+            document.getElementById('toolMissingBadge').innerText = `${tools.missing_text.missing_count} Omissions`;
+            document.getElementById('toolMissingDesc').innerText = tools.missing_text.details;
+
+            document.getElementById('toolFieldsBadge').innerText = `${tools.mandatory_fields.found_fields.length}/${tools.mandatory_fields.found_fields.length + tools.mandatory_fields.missing_fields.length} Found`;
+            document.getElementById('toolFieldsDesc').innerText = tools.mandatory_fields.missing_fields.length > 0
+                ? `Missing: ${tools.mandatory_fields.missing_fields.join(', ')}`
+                : 'All required mandatory fields identified.';
+
+            document.getElementById('toolLangBadge').innerText = `${tools.language_check.detected_language.toUpperCase()} (${tools.language_check.is_match ? 'Match' : 'Mismatch'})`;
+            document.getElementById('toolLangDesc').innerText = tools.language_check.details;
+
+            // Console Log
+            document.getElementById('consoleBox').innerText = data.agent_reasoning;
+
+            // Remediation Recommendations
+            const recList = document.getElementById('recList');
+            recList.innerHTML = '';
+            score.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.className = 'rec-item';
+                li.innerText = rec;
+                recList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+
+</html>

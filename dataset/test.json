@@ -1,0 +1,34 @@
+[
+  {
+    "id": "tc_001_perfect_invoice",
+    "name": "Perfect Invoice Extraction",
+    "target_language": "en",
+    "mandatory_fields": ["Invoice Number", "Date", "Total Amount", "Vendor"],
+    "ocr_text": "ACME LOGISTICS INC.\n100 Tech Way, Suite 400\nINVOICE #INV-2026-8891\nDate: 2026-08-01\nVendor: ACME Logistics\n\nDescription: Cloud Infrastructure Consulting Services\nSubtotal: $4,500.00\nTax (10%): $450.00\nTotal Amount: $4,950.00\n\nThank you for your business!",
+    "ground_truth_text": "ACME LOGISTICS INC.\n100 Tech Way, Suite 400\nINVOICE #INV-2026-8891\nDate: 2026-08-01\nVendor: ACME Logistics\n\nDescription: Cloud Infrastructure Consulting Services\nSubtotal: $4,500.00\nTax (10%): $450.00\nTotal Amount: $4,950.00\n\nThank you for your business!"
+  },
+  {
+    "id": "tc_002_missing_fields_invoice",
+    "name": "Invoice with Missing Total & Date",
+    "target_language": "en",
+    "mandatory_fields": ["Invoice Number", "Date", "Total Amount", "Customer"],
+    "ocr_text": "INVOICE #INV-9941\nCustomer: Global Corp\nItem: Office Supplies\nAmount: $120.00",
+    "ground_truth_text": "INVOICE #INV-9941\nDate: 2026-07-15\nCustomer: Global Corp\nItem: Office Supplies\nAmount: $120.00\nTotal Amount: $120.00"
+  },
+  {
+    "id": "tc_003_corrupted_scan",
+    "name": "Low Quality Corrupted Scan",
+    "target_language": "en",
+    "mandatory_fields": ["Invoice Number", "Date", "Total Amount"],
+    "ocr_text": "INVO1C3 #I|V-002\nD@t3: ??/??/2026\nTot@l Am0unt: $~~~\n|/\\_ Corrupted Scan Noise line #%@$",
+    "ground_truth_text": "INVOICE #INV-002\nDate: 2026-05-10\nTotal Amount: $500.00"
+  },
+  {
+    "id": "tc_004_spanish_receipt",
+    "name": "Spanish Utility Receipt",
+    "target_language": "es",
+    "mandatory_fields": ["Factura", "Fecha", "Total"],
+    "ocr_text": "FACTURA DE SERVICIOS #ES-8821\nFecha: 12/07/2026\nCliente: Maria Gomez\nTotal: 145.50 EUR\nGracias por su compra.",
+    "ground_truth_text": "FACTURA DE SERVICIOS #ES-8821\nFecha: 12/07/2026\nCliente: Maria Gomez\nTotal: 145.50 EUR\nGracias por su compra."
+  }
+]
