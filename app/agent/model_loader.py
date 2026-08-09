@@ -15,7 +15,6 @@ MODEL_MAPPINGS = {
     ],
     "phi4": [
         os.path.join(MODELS_DIR, "Phi_4_Mini_Instruct"),
-        os.path.join(MODELS_DIR, "Phi-4 Mini Instruct"),
         os.path.join(MODELS_DIR, "phi4")
     ]
 }
@@ -70,10 +69,8 @@ class SLMModelLoader:
         if not key:
             raise ValueError(f"Invalid model_name '{model_name}'. Supported model names are 'qwen3' or 'phi4'.")
         
-        # Reset loaded dictionary so only the target model is marked loaded
-        self.loaded_models = {}
-        self.loaded_tokenizers = {}
-        self._detect_available_models()
+        if key in self.loaded_models and self.loaded_models[key] is not None:
+            return True
 
         if not LOAD_MODEL_DIRECTLY:
             self.loaded_models[key] = "agent_mode"
