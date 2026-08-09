@@ -53,4 +53,3 @@ def test_invalid_model_name_error():
     response = client.post("/models/load?model_name=Qw")
     assert response.status_code == 400
     assert "Invalid model_name" in response.json()["detail"]
-
