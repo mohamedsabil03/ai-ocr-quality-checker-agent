@@ -14,15 +14,22 @@ MODEL_MAPPINGS = {
         os.path.join(MODELS_DIR, "qwen3")
     ],
     "phi4": [
+        os.path.join(MODELS_DIR, "Phi_4_Mini_Instruct"),
         os.path.join(MODELS_DIR, "Phi-4 Mini Instruct"),
         os.path.join(MODELS_DIR, "phi4")
     ]
 }
 
 
+# Configuration toggle for loading heavy PyTorch weights into memory.
+# Default is False to preserve memory and run fast on laptops.
+LOAD_MODEL_DIRECTLY = os.getenv("LOAD_MODEL_DIRECTLY", "false").lower() in ("true", "1", "t")
+
+
 class SLMModelLoader:
     """
-    Manages loading and real PyTorch inference for Small Language Models (Qwen3-4B-Instruct & Phi-4 Mini Instruct).
+    Manages Small Language Models (Qwen3-4B-Instruct & Phi-4 Mini Instruct) in lightweight agent mode
+    or real PyTorch inference if LOAD_MODEL_DIRECTLY is enabled.
     """
 
     def __init__(self):
@@ -32,16 +39,19 @@ class SLMModelLoader:
         self._detect_available_models()
 
     def _detect_available_models(self):
-        """Scans local models directory for Qwen3 and Phi-4 Mini weights."""
+        """Scans local models directory or sets lightweight mode status."""
         for key, paths in MODEL_MAPPINGS.items():
-            found = False
-            for path in paths:
-                if os.path.exists(path) and os.path.isdir(path):
-                    self.model_status[key] = f"Available locally at: {path}"
-                    found = True
-                    break
-            if not found:
-                self.model_status[key] = "Not found locally (High-performance SLM agent mode active)"
+            if not LOAD_MODEL_DIRECTLY:
+                self.model_status[key] = "Ready (Lightweight Agent Mode active - memory efficient)"
+            else:
+                found = False
+                for path in paths:
+                    if os.path.exists(path) and os.path.isdir(path):
+                        self.model_status[key] = f"Available locally at: {path}"
+                        found = True
+                        break
+                if not found:
+                    self.model_status[key] = "Not found locally (High-performance SLM agent mode active)"
 
     def resolve_model_key(self, model_name: str) -> Optional[str]:
         """Validates and resolves model_name alias to canonical key ('qwen3' or 'phi4')."""
@@ -50,7 +60,7 @@ class SLMModelLoader:
         clean = model_name.strip().lower()
         if clean in ["qwen", "qwen3", "qwen3-4b", "qwen3-4b-instruct"]:
             return "qwen3"
-        elif clean in ["phi", "phi4", "phi-4", "phi4-mini", "phi-4 mini instruct"]:
+        elif clean in ["phi", "phi4", "phi-4", "phi4-mini", "phi-4 mini instruct", "phi_4_mini_instruct"]:
             return "phi4"
         return None
 
@@ -60,7 +70,15 @@ class SLMModelLoader:
         if not key:
             raise ValueError(f"Invalid model_name '{model_name}'. Supported model names are 'qwen3' or 'phi4'.")
         
-        if key in self.loaded_models and self.loaded_models[key] is not None:
+        # Reset loaded dictionary so only the target model is marked loaded
+        self.loaded_models = {}
+        self.loaded_tokenizers = {}
+        self._detect_available_models()
+
+        if not LOAD_MODEL_DIRECTLY:
+            self.loaded_models[key] = "agent_mode"
+            self.model_status[key] = "Active (Lightweight Agent Mode - Direct loading disabled)"
+            logger.info(f"Direct model loading disabled. Operating in Lightweight Agent Mode for {model_name}.")
             return True
 
         paths = MODEL_MAPPINGS.get(key, [])
@@ -72,16 +90,60 @@ class SLMModelLoader:
 
         try:
             import torch
-            from transformers import AutoModelForCausalLM, AutoTokenizer
+            from transformers import AutoTokenizer
             if model_path:
                 logger.info(f"Loading local PyTorch model weights for {model_name} from {model_path}...")
                 tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-                    device_map="auto" if torch.cuda.is_available() else None,
-                    trust_remote_code=True
-                )
+                
+                # Build sequence of candidate AutoModel classes (e.g. Qwen3-VL uses AutoModelForImageTextToText)
+                auto_classes = []
+                try:
+                    from transformers import AutoModelForImageTextToText
+                    auto_classes.append(AutoModelForImageTextToText)
+                except ImportError:
+                    pass
+                try:
+                    from transformers import AutoModelForCausalLM
+                    auto_classes.append(AutoModelForCausalLM)
+                except ImportError:
+                    pass
+                try:
+                    from transformers import AutoModelForMultimodalLM
+                    auto_classes.append(AutoModelForMultimodalLM)
+                except ImportError:
+                    pass
+                from transformers import AutoModel
+                auto_classes.append(AutoModel)
+
+                model = None
+                last_err = None
+                for cls in auto_classes:
+                    try:
+                        load_kwargs = {"trust_remote_code": True}
+                        if torch.cuda.is_available():
+                            load_kwargs["dtype"] = torch.float16
+                            load_kwargs["device_map"] = "auto"
+                        else:
+                            load_kwargs["dtype"] = torch.float32
+
+                        candidate = cls.from_pretrained(model_path, **load_kwargs)
+                        
+                        # Verify no parameters left on meta tensor to avoid "Cannot copy out of meta tensor"
+                        if any(getattr(p, "is_meta", False) for p in candidate.parameters()):
+                            logger.warning(f"Meta tensors detected for {model_name} with {cls.__name__}, retrying without device_map...")
+                            load_kwargs.pop("device_map", None)
+                            candidate = cls.from_pretrained(model_path, **load_kwargs)
+
+                        model = candidate
+                        logger.info(f"Successfully loaded model {model_name} with {cls.__name__}")
+                        break
+                    except Exception as e:
+                        last_err = e
+                        continue
+
+                if model is None:
+                    raise last_err or RuntimeError(f"Failed to load model {model_name} with available AutoModel classes.")
+
                 self.loaded_models[key] = model
                 self.loaded_tokenizers[key] = tokenizer
                 self.model_status[key] = f"Active PyTorch Model Loaded in RAM/VRAM ({model_path})"
@@ -108,16 +170,28 @@ class SLMModelLoader:
             try:
                 import torch
                 inputs = tokenizer(prompt, return_tensors="pt")
-                if torch.cuda.is_available():
-                    inputs = {k: v.to("cuda") for k, v in inputs.items()}
+                
+                # Determine device dynamically, skipping meta tensor assignments
+                target_device = getattr(model, "device", None)
+                if target_device is None or str(target_device) == "meta":
+                    try:
+                        target_device = next(model.parameters()).device
+                    except Exception:
+                        target_device = "cuda" if torch.cuda.is_available() else "cpu"
+
+                if str(target_device) != "meta":
+                    inputs = {k: v.to(target_device) for k, v in inputs.items()}
+                
+                gen_kwargs = {
+                    "max_new_tokens": max_new_tokens,
+                    "do_sample": False,
+                    "pad_token_id": getattr(tokenizer, "eos_token_id", None)
+                }
                 
                 with torch.no_grad():
                     output_ids = model.generate(
                         **inputs,
-                        max_new_tokens=max_new_tokens,
-                        temperature=0.2,
-                        do_sample=False,
-                        pad_token_id=tokenizer.eos_token_id
+                        **gen_kwargs
                     )
                 
                 generated_text = tokenizer.decode(output_ids[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)

@@ -596,10 +596,6 @@
                 </svg>
                 OpenAPI Docs
             </a>
-            <div class="status-pill">
-                <span class="status-dot"></span>
-                <span>API Online</span>
-            </div>
         </div>
     </header>
 
@@ -657,8 +653,8 @@
                 <div class="form-group">
                     <label for="model_name">Small Language Model Agent</label>
                     <select id="model_name">
-                        <option value="qwen3">Qwen3-4B-Instruct (Local / High-Perf Agent)</option>
-                        <option value="phi4">Phi-4 Mini Instruct (Local / High-Perf Agent)</option>
+                        <option value="qwen3">Qwen3-4B-Instruct</option>
+                        <option value="phi4">Phi-4 Mini Instruct</option>
                     </select>
                 </div>
 
@@ -673,9 +669,7 @@
         <div class="panel panel-right">
             <div class="section-header">
                 <span class="section-title">Diagnostic Assessment Report</span>
-                <span id="modelTag"
-                    style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--brand-primary);">SLM:
-                    QWEN3-4B</span>
+
             </div>
 
             <!-- Overall Quality Score Hero -->
@@ -765,12 +759,6 @@
                 </div>
             </div>
 
-            <!-- Agent Chain-of-Thought Terminal Log -->
-            <div class="form-group">
-                <label>Agent Chain-of-Thought Execution Console</label>
-                <div class="console-block" id="consoleBox">Console ready. Click "Run Quality Diagnostic" to execute
-                    workflow.</div>
-            </div>
 
             <!-- Actionable Recommendations -->
             <div class="form-group">
@@ -893,7 +881,7 @@
         });
 
         function renderResults(data, duration) {
-            document.getElementById('modelTag').innerText = 'SLM: ' + data.model_used.toUpperCase();
+
             document.getElementById('evalTime').innerText = `Executed in ${duration}ms`;
 
             const score = data.score;
@@ -920,8 +908,6 @@
             document.getElementById('toolLangBadge').innerText = `${tools.language_check.detected_language.toUpperCase()} (${tools.language_check.is_match ? 'Match' : 'Mismatch'})`;
             document.getElementById('toolLangDesc').innerText = tools.language_check.details;
 
-            // Console Log
-            document.getElementById('consoleBox').innerText = data.agent_reasoning;
 
             // Remediation Recommendations
             const recList = document.getElementById('recList');

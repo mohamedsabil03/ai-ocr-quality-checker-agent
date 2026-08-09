@@ -93,10 +93,14 @@ ai-ocr-quality-checker/
 pip install -r requirements.txt
 ```
 
-2. **Run FastAPI Server**:
+2. **Run FastAPI Server (Laptop-Friendly Lightweight Mode)**:
+By default, `LOAD_MODEL_DIRECTLY=false` is active so heavy PyTorch model weights are **not loaded directly into memory**, ensuring optimal speed and near-zero memory footprint on laptops.
+
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+*(Optional: If running on a high-GPU dedicated server and direct PyTorch weight loading is desired, set `LOAD_MODEL_DIRECTLY=true` in your environment).*
 
 3. **Access Interactive Web UI Dashboard**:
 Open your browser and navigate to: [http://localhost:8000](http://localhost:8000)
