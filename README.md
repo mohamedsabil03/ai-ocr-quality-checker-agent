@@ -4,7 +4,7 @@ A production-grade AI-powered OCR Quality Checker system built with **FastAPI**,
 
 ---
 
-## 📐 Architecture Overview
+## Architecture Overview
 
 ```
                   ┌─────────────────┐
@@ -40,7 +40,7 @@ A production-grade AI-powered OCR Quality Checker system built with **FastAPI**,
 
 ---
 
-## 📂 Directory Structure
+## Directory Structure
 
 ```
 ai-ocr-quality-checker/
@@ -86,7 +86,7 @@ ai-ocr-quality-checker/
 
 ---
 
-## 🛠️ Installation & Setup
+##  Installation & Setup
 
 1. **Install Dependencies**:
 ```bash
@@ -103,7 +103,7 @@ Open your browser and navigate to: [http://localhost:8000](http://localhost:8000
 
 ---
 
-## 🔌 API & Swagger Documentation
+## API & Swagger Documentation
 
 FastAPI provides automatic interactive Swagger UI and ReDoc documentation:
 
@@ -154,7 +154,7 @@ Lists available model weights (Qwen3 & Phi-4 Mini).
 
 ---
 
-## 🧪 Running Automated Tests
+##  Running Automated Tests
 
 Execute unit and integration test suites using `pytest`:
 
