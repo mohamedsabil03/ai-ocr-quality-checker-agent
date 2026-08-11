@@ -23,8 +23,8 @@ logger = logging.getLogger("ocr_agent.agent")
 
 class OCRAgent:
     """
-    Autonomous ReAct OCR Quality Agent orchestrator. Small Language Models (Qwen3 / Phi-4 Mini)
-    dynamically choose, call, and process diagnostic tools in a multi-turn tool-calling loop.
+    Autonomous ReAct OCR Quality Agent orchestrator. Small Language Model (Qwen3-4B-Instruct)
+    dynamically chooses, calls, and processes diagnostic tools in a multi-turn tool-calling loop.
     """
 
     def __init__(self, default_model: str = "qwen3"):
@@ -56,15 +56,15 @@ class OCRAgent:
     def evaluate(self, request: OCRCheckRequest) -> OCRCheckResponse:
         """
         Executes autonomous multi-turn ReAct tool-calling agent loop.
-        Qwen3 / Phi-4 Mini selects tools, processes observations, and synthesizes final quality evaluation.
+        Qwen3-4B-Instruct selects tools, processes observations, and synthesizes final quality evaluation.
         """
         model_name = request.model_name or self.default_model
         key = model_loader.resolve_model_key(model_name)
         if not key:
-            raise ValueError(f"Invalid model_name '{model_name}'. Supported model names are 'qwen3' or 'phi4'.")
+            raise ValueError(f"Invalid model_name '{model_name}'. Supported model name is 'qwen3'.")
 
         model_loader.load_model(model_name)
-        canonical_name = "Qwen3-4B-Instruct" if key == "qwen3" else "Phi-4 Mini Instruct"
+        canonical_name = "Qwen3-4B-Instruct"
 
         # Conversation and tool observation tracking
         conversation_history: List[Dict[str, str]] = []
@@ -139,39 +139,22 @@ class OCRAgent:
             lang_res=lang_res
         )
 
-        # Model-specific reasoning synthesis
-        if key == "qwen3":
-            agent_steps.append(
-                f"{len(agent_steps) + 1}. [Qwen3 Token Analysis]: Synthesized multi-tool observations with fine-grained sequence validation."
-            )
-            agent_steps.append(
-                f"{len(agent_steps) + 1}. [Final Quality Synthesis]: Calculated overall score as {score_breakdown.overall_score}/100 Grade: [{score_breakdown.grade}]."
-            )
-            reasoning_text = (
-                f"Autonomous LLM Tool-Calling Agent Execution Log (Qwen3-4B-Instruct):\n" +
-                "┌─────────────────────────────────────────────────────────────┐\n" +
-                "│ Model Architecture: Qwen3-4B-Instruct (Vision-Language SLM)  │\n" +
-                "└─────────────────────────────────────────────────────────────┘\n" +
-                "\n".join(agent_steps) + "\n\n" +
-                f"Qwen3 Assessment Verdict: Document quality graded as [{score_breakdown.grade}] ({score_breakdown.overall_score}/100).\n" +
-                ("Decision: Approved for automated downstream ERP / database ingestion." if score_breakdown.grade in ["EXCELLENT", "GOOD"] else "Decision: Flagged for human review due to missing data or corruption risks.")
-            )
-        else:
-            agent_steps.append(
-                f"{len(agent_steps) + 1}. [Phi-4 Mathematical Verification]: Computed weighted metric scores (Completeness: {score_breakdown.completeness_score}%, Field Accuracy: {score_breakdown.field_accuracy_score}%, Language: {score_breakdown.language_score}%)."
-            )
-            agent_steps.append(
-                f"{len(agent_steps) + 1}. [Final Quality Synthesis]: Calculated overall score as {score_breakdown.overall_score}/100 Grade: [{score_breakdown.grade}]."
-            )
-            reasoning_text = (
-                f"Autonomous LLM Tool-Calling Agent Execution Log (Phi-4 Mini Instruct):\n" +
-                "┌─────────────────────────────────────────────────────────────┐\n" +
-                "│ Model Architecture: Phi-4 Mini Instruct (Compact SLM Agent) │\n" +
-                "└─────────────────────────────────────────────────────────────┘\n" +
-                "\n".join(agent_steps) + "\n\n" +
-                f"Phi-4 Mini Usability Verdict: OCR Quality score evaluated as [{score_breakdown.overall_score}/100] -> [{score_breakdown.grade}].\n" +
-                ("Action: Document structure is intact. Pass to automated processing." if score_breakdown.grade in ["EXCELLENT", "GOOD"] else "Action: Document structure degraded. Send to verification queue.")
-            )
+        # Reasoning synthesis
+        agent_steps.append(
+            f"{len(agent_steps) + 1}. [Qwen3 Token Analysis]: Synthesized multi-tool observations with fine-grained sequence validation."
+        )
+        agent_steps.append(
+            f"{len(agent_steps) + 1}. [Final Quality Synthesis]: Calculated overall score as {score_breakdown.overall_score}/100 Grade: [{score_breakdown.grade}]."
+        )
+        reasoning_text = (
+            f"Autonomous LLM Tool-Calling Agent Execution Log (Qwen3-4B-Instruct):\n" +
+            "┌─────────────────────────────────────────────────────────────┐\n" +
+            "│ Model Architecture: Qwen3-4B-Instruct (Vision-Language SLM)  │\n" +
+            "└─────────────────────────────────────────────────────────────┘\n" +
+            "\n".join(agent_steps) + "\n\n" +
+            f"Qwen3 Assessment Verdict: Document quality graded as [{score_breakdown.grade}] ({score_breakdown.overall_score}/100).\n" +
+            ("Decision: Approved for automated downstream ERP / database ingestion." if score_breakdown.grade in ["EXCELLENT", "GOOD"] else "Decision: Flagged for human review due to missing data or corruption risks.")
+        )
 
         return OCRCheckResponse(
             model_used=model_name,

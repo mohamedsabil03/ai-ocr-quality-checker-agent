@@ -12,10 +12,6 @@ MODEL_MAPPINGS = {
     "qwen3": [
         os.path.join(MODELS_DIR, "Qwen3-4B-Instruct"),
         os.path.join(MODELS_DIR, "qwen3")
-    ],
-    "phi4": [
-        os.path.join(MODELS_DIR, "Phi_4_Mini_Instruct"),
-        os.path.join(MODELS_DIR, "phi4")
     ]
 }
 
@@ -27,7 +23,7 @@ LOAD_MODEL_DIRECTLY = os.getenv("LOAD_MODEL_DIRECTLY", "false").lower() in ("tru
 
 class SLMModelLoader:
     """
-    Manages Small Language Models (Qwen3-4B-Instruct & Phi-4 Mini Instruct) in lightweight agent mode
+    Manages Small Language Models (Qwen3-4B-Instruct) in lightweight agent mode
     or real PyTorch inference if LOAD_MODEL_DIRECTLY is enabled.
     """
 
@@ -53,21 +49,19 @@ class SLMModelLoader:
                     self.model_status[key] = "Not found locally (High-performance SLM agent mode active)"
 
     def resolve_model_key(self, model_name: str) -> Optional[str]:
-        """Validates and resolves model_name alias to canonical key ('qwen3' or 'phi4')."""
+        """Validates and resolves model_name alias to canonical key ('qwen3')."""
         if not model_name:
             return None
         clean = model_name.strip().lower()
         if clean in ["qwen", "qwen3", "qwen3-4b", "qwen3-4b-instruct"]:
             return "qwen3"
-        elif clean in ["phi", "phi4", "phi-4", "phi4-mini", "phi-4 mini instruct", "phi_4_mini_instruct"]:
-            return "phi4"
         return None
 
     def load_model(self, model_name: str) -> bool:
         """Loads local model weights into memory or initializes agent context."""
         key = self.resolve_model_key(model_name)
         if not key:
-            raise ValueError(f"Invalid model_name '{model_name}'. Supported model names are 'qwen3' or 'phi4'.")
+            raise ValueError(f"Invalid model_name '{model_name}'. Supported model name is 'qwen3'.")
         
         if key in self.loaded_models and self.loaded_models[key] is not None:
             return True
@@ -156,7 +150,7 @@ class SLMModelLoader:
         """Runs model text generation (via PyTorch model weights if available, or SLM Agent inference)."""
         key = self.resolve_model_key(model_name)
         if not key:
-            raise ValueError(f"Invalid model_name '{model_name}'. Supported model names are 'qwen3' or 'phi4'.")
+            raise ValueError(f"Invalid model_name '{model_name}'. Supported model name is 'qwen3'.")
 
         self.load_model(model_name)
         model = self.loaded_models.get(key)
@@ -206,11 +200,6 @@ class SLMModelLoader:
                     "name": "Qwen3-4B-Instruct",
                     "status": self.model_status.get("qwen3", "Unknown"),
                     "loaded": "qwen3" in self.loaded_models
-                },
-                "phi4": {
-                    "name": "Phi-4 Mini Instruct",
-                    "status": self.model_status.get("phi4", "Unknown"),
-                    "loaded": "phi4" in self.loaded_models
                 }
             }
         }
@@ -228,10 +217,10 @@ class SLMModelLoader:
         """Generates structured agent reasoning and CoT quality assessment."""
         key = self.resolve_model_key(model_name)
         if not key:
-            raise ValueError(f"Invalid model_name '{model_name}'. Supported model names are 'qwen3' or 'phi4'.")
+            raise ValueError(f"Invalid model_name '{model_name}'. Supported model name is 'qwen3'.")
         self.load_model(model_name)
 
-        canonical_model = "Qwen3-4B-Instruct" if key == "qwen3" else "Phi-4 Mini Instruct"
+        canonical_model = "Qwen3-4B-Instruct"
         
         cot_steps = []
         cot_steps.append(f"1. [Input Ingestion]: Read OCR payload of length {len(ocr_text)} characters.")

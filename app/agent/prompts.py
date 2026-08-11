@@ -1,5 +1,5 @@
 """
-Prompts and templates for OCR Quality Agent (Qwen3 / Phi-4 Mini) Tool-Calling Loop.
+Prompts and templates for OCR Quality Agent (Qwen3-4B-Instruct) Tool-Calling Loop.
 """
 
 TOOL_DEFINITIONS = [
@@ -42,7 +42,7 @@ TOOL_DEFINITIONS = [
 ]
 
 
-REACT_SYSTEM_PROMPT = """You are an autonomous AI OCR Quality Agent powered by Small Language Models (Qwen3 / Phi-4 Mini).
+REACT_SYSTEM_PROMPT = """You are an autonomous AI OCR Quality Agent powered by Small Language Models (Qwen3-4B-Instruct).
 Your job is to audit OCR text extractions using available diagnostic tools before rendering a final quality assessment.
 
 AVAILABLE DIAGNOSTIC TOOLS:
@@ -77,24 +77,11 @@ When you have gathered all necessary tool observations, respond with your final 
 
 def format_react_prompt(ocr_text: str, conversation_history: list, model_name: str) -> str:
     """Formats prompt payload with conversation history for ReAct agent loop."""
-    is_qwen = "qwen" in model_name.lower()
-    
-    if is_qwen:
-        prompt = f"<|im_start|>system\n{REACT_SYSTEM_PROMPT}\n<|im_end|>\n"
-        prompt += f"<|im_start|>user\nPlease evaluate this OCR Text payload:\n\"\"\"\n{ocr_text}\n\"\"\"\n<|im_end|>\n"
-        for turn in conversation_history:
-            role = turn.get("role", "assistant")
-            content = turn.get("content", "")
-            prompt += f"<|im_start|>{role}\n{content}\n<|im_end|>\n"
-        prompt += "<|im_start|>assistant\n"
-    else:
-        # Phi-4 / Standard Instruct format
-        prompt = f"<|system|>\n{REACT_SYSTEM_PROMPT}<|end|>\n"
-        prompt += f"<|user|>\nPlease evaluate this OCR Text payload:\n\"\"\"\n{ocr_text}\n\"\"\"<|end|>\n"
-        for turn in conversation_history:
-            role = turn.get("role", "assistant")
-            content = turn.get("content", "")
-            prompt += f"<|{role}|>\n{content}<|end|>\n"
-        prompt += "<|assistant|>\n"
-        
+    prompt = f"<|im_start|>system\n{REACT_SYSTEM_PROMPT}\n<|im_end|>\n"
+    prompt += f"<|im_start|>user\nPlease evaluate this OCR Text payload:\n\"\"\"\n{ocr_text}\n\"\"\"\n<|im_end|>\n"
+    for turn in conversation_history:
+        role = turn.get("role", "assistant")
+        content = turn.get("content", "")
+        prompt += f"<|im_start|>{role}\n{content}\n<|im_end|>\n"
+    prompt += "<|im_start|>assistant\n"
     return prompt

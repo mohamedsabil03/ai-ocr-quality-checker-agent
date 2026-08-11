@@ -19,7 +19,7 @@ def test_models_endpoint():
     data = response.json()
     assert "models" in data
     assert "qwen3" in data["models"]
-    assert "phi4" in data["models"]
+    assert "phi4" not in data["models"]
 
 
 def test_ocr_check_endpoint_success():
@@ -61,4 +61,3 @@ def test_load_specific_model():
     data = response.json()
     assert data["success"] is True
     assert data["status"]["models"]["qwen3"]["loaded"] is True
-    assert data["status"]["models"]["phi4"]["loaded"] is False

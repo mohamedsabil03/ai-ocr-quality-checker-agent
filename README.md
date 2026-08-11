@@ -1,6 +1,6 @@
 # AI OCR Quality Checker (SLM Agent)
 
-A production-grade AI-powered OCR Quality Checker system built with **FastAPI**, Small Language Models (**Qwen3-4B-Instruct** / **Phi-4 Mini Instruct**), dedicated diagnostic tools, a calibrated 0–100 Scoring Engine, and an interactive Web Dashboard.
+A production-grade AI-powered OCR Quality Checker system built with **FastAPI**, Small Language Models (**Qwen3-4B-Instruct**), dedicated diagnostic tools, a calibrated 0–100 Scoring Engine, and an interactive Web Dashboard.
 
 ---
 
@@ -15,7 +15,7 @@ A production-grade AI-powered OCR Quality Checker system built with **FastAPI**,
                            ▼
                 ┌─────────────────────┐
                 │   OCR Quality Agent │
-                │ Qwen / Phi-4 Mini   │
+                │      Qwen3-4B       │
                 └──────────┬──────────┘
                            │
                      Tool Calling
@@ -54,7 +54,7 @@ ai-ocr-quality-checker/
 │   ├── agent/
 │   │   ├── ocr_agent.py     # OCR Agent orchestrator
 │   │   ├── prompts.py       # CoT & System prompts
-│   │   └── model_loader.py  # Qwen3 & Phi-4 Mini SLM model loader
+│   │   └── model_loader.py  # Qwen3 SLM model loader
 │   │
 │   ├── tools/
 │   │   ├── missing_text.py      # Missing text / omissions tool
@@ -68,8 +68,7 @@ ai-ocr-quality-checker/
 │       └── helpers.py       # Fuzzy matching & text utilities
 │
 ├── models/
-│   ├── Qwen3-4B-Instruct/   # Local Qwen3 model weights
-│   └── Phi-4 Mini Instruct/ # Local Phi-4 Mini model weights
+│   └── Qwen3-4B-Instruct/   # Local Qwen3 model weights
 │
 ├── dataset/
 │   ├── test.json            # Test case suite
@@ -154,7 +153,7 @@ Evaluates an OCR text payload against mandatory fields, language targets, and gr
 Returns service status and active SLM model load state.
 
 ### 3. `GET /models`
-Lists available model weights (Qwen3 & Phi-4 Mini).
+Lists available model weights (Qwen3-4B-Instruct).
 
 ---
 

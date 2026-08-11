@@ -13,7 +13,7 @@ class OCRCheckRequest(BaseModel):
         json_schema_extra={"example": ["Invoice Number", "Date", "Total Amount"]}
     )
     target_language: Optional[str] = Field("en", description="Expected language ISO code (e.g. 'en', 'es', 'de', 'fr')")
-    model_name: Optional[str] = Field("qwen3", description="SLM model to use: 'qwen3' or 'phi4'")
+    model_name: Optional[str] = Field("qwen3", description="SLM model to use: 'qwen3'")
     enable_tools: Optional[List[str]] = Field(
         default_factory=lambda: ["missing_text", "mandatory_fields", "language_check"],
         description="Active evaluation tools",

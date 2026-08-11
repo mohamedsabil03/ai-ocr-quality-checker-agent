@@ -48,13 +48,13 @@ async def health_check():
     }
 
 
-@app.get("/models", tags=["System & Models"], summary="List SLM Models", description="Retrieve available local Small Language Model weights (Qwen3-4B-Instruct & Phi-4 Mini Instruct).")
+@app.get("/models", tags=["System & Models"], summary="List SLM Models", description="Retrieve available local Small Language Model weights (Qwen3-4B-Instruct).")
 async def list_models():
     """Returns available local SLM models and load status."""
     return model_loader.get_available_models()
 
 
-@app.post("/models/load", tags=["System & Models"], summary="Explicitly Load SLM Model", description="Triggers loading of Qwen3 or Phi-4 Mini model weights into memory.")
+@app.post("/models/load", tags=["System & Models"], summary="Explicitly Load SLM Model", description="Triggers loading of Qwen3 model weights into memory.")
 async def load_model_endpoint(model_name: str = "qwen3"):
     """Loads specified SLM model into memory."""
     try:
