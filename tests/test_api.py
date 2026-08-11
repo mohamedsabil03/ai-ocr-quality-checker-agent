@@ -61,3 +61,17 @@ def test_load_specific_model():
     data = response.json()
     assert data["success"] is True
     assert data["status"]["models"]["qwen3"]["loaded"] is True
+
+
+def test_sample_invoice_endpoint():
+    response = client.get("/sample/invoice")
+    assert response.status_code == 200
+    data = response.json()
+    assert "ocr_text" in data
+    assert "mandatory_fields" in data
+    assert "target_language" in data
+
+
+def test_favicon_endpoint():
+    response = client.get("/favicon.ico")
+    assert response.status_code == 204

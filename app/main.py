@@ -1,5 +1,6 @@
 import os
-from fastapi import FastAPI, HTTPException, Request
+import json
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -35,6 +36,39 @@ async def serve_dashboard():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return HTMLResponse("<h2>AI OCR Quality Checker API is running. UI dashboard not found.</h2>")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Favicon endpoint to eliminate browser 404 logs."""
+    return Response(status_code=204)
+
+
+@app.get("/sample/invoice", tags=["OCR Evaluation"], summary="Get Sample Invoice Payload", description="Retrieve a sample invoice dataset item for OCR testing and benchmarking.")
+async def get_sample_invoice(sample_id: str = None):
+    """Returns sample invoice test data from dataset."""
+    dataset_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dataset", "test.json")
+    if os.path.exists(dataset_path):
+        try:
+            with open(dataset_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if sample_id:
+                sample = next((item for item in data if item.get("id") == sample_id), None)
+                if sample:
+                    return sample
+                raise HTTPException(status_code=404, detail=f"Sample '{sample_id}' not found.")
+            return data[0] if data else {}
+        except json.JSONDecodeError:
+            pass
+
+    return {
+        "id": "tc_001_perfect_invoice",
+        "name": "Perfect Invoice Extraction",
+        "target_language": "en",
+        "mandatory_fields": ["Invoice Number", "Date", "Total Amount", "Vendor"],
+        "ocr_text": "ACME LOGISTICS INC.\n100 Tech Way, Suite 400\nINVOICE #INV-2026-8891\nDate: 2026-08-01\nVendor: ACME Logistics\n\nDescription: Cloud Infrastructure Consulting Services\nSubtotal: $4,500.00\nTax (10%): $450.00\nTotal Amount: $4,950.00\n\nThank you for your business!",
+        "ground_truth_text": "ACME LOGISTICS INC.\n100 Tech Way, Suite 400\nINVOICE #INV-2026-8891\nDate: 2026-08-01\nVendor: ACME Logistics\n\nDescription: Cloud Infrastructure Consulting Services\nSubtotal: $4,500.00\nTax (10%): $450.00\nTotal Amount: $4,950.00\n\nThank you for your business!"
+    }
 
 
 @app.get("/health", tags=["System & Models"], summary="Service Health & Status", description="Check system operational status and loaded SLM models.")
