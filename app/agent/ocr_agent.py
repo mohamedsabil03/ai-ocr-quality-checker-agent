@@ -77,21 +77,16 @@ class OCRAgent:
         max_turns = 4
         for turn in range(max_turns):
             # Check remaining tools to decide next tool call
-            unexecuted = []
-            if "missing_text" in enabled_tools and "missing_text_tool" not in executed_tools:
-                unexecuted.append("missing_text_tool")
-            if "mandatory_fields" in enabled_tools and "mandatory_fields_tool" not in executed_tools:
-                unexecuted.append("mandatory_fields_tool")
-            if "language_check" in enabled_tools and "language_check_tool" not in executed_tools:
-                unexecuted.append("language_check_tool")
+            unexecuted = [
+                t for t in ["missing_text_tool", "mandatory_fields_tool", "language_check_tool"]
+                if t in [f"{tool}_tool" for tool in enabled_tools] and t not in executed_tools
+            ]
 
             if not unexecuted:
                 agent_steps.append(f"{len(agent_steps) + 1}. [Tool Loop Complete]: All active diagnostic tools executed successfully.")
                 break
 
-            target_tool = unexecuted[0]
-
-            # 1. Format prompt for LLM
+            # 1. Format prompt for LLM including conversation history
             prompt = format_react_prompt(request.ocr_text, conversation_history, model_name)
             
             # 2. Invoke LLM generation if local PyTorch weights available
